@@ -1,0 +1,277 @@
+<html lang="en" dir="ltr">
+  <head>
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+body{
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  justify-content: center;
+  min-height: 100vh;
+  background: #fffd6e;
+}
+.wrapper{
+  width: 450px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+}
+.wrapper header{
+  display: flex;
+  align-items: center;
+  padding: 25px 30px 10px;
+  justify-content: space-between;
+}
+header .icons{
+  display: flex;
+}
+header .icons span{
+  height: 38px;
+  width: 38px;
+  margin: 0 1px;
+  cursor: pointer;
+  color: #878787;
+  text-align: center;
+  line-height: 38px;
+  font-size: 1.9rem;
+  user-select: none;
+  border-radius: 50%;
+}
+.icons span:last-child{
+  margin-right: -10px;
+}
+header .icons span:hover{
+  background: #f2f2f2;
+}
+header .current-date{
+  font-size: 1.45rem;
+  font-weight: 500;
+}
+.calendar{
+  padding: 20px;
+}
+.calendar ul{
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  text-align: center;
+}
+.calendar .days{
+  margin-bottom: 20px;
+}
+.calendar li{
+  color: #333;
+  width: calc(100% / 7);
+  font-size: 1.07rem;
+}
+.calendar .weeks li{
+  font-weight: 500;
+  cursor: default;
+}
+.calendar .days li{
+  z-index: 1;
+  cursor: pointer;
+  position: relative;
+  margin-top: 30px;
+}
+.days li.inactive{
+  opacity: 0.5;;
+}
+.days li.active{
+  color: #fff;
+}
+.days li::before{
+  position: absolute;
+  content: "";
+  left: 50%;
+  top: 50%;
+  height: 40px;
+  width: 40px;
+  z-index: -1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.days li.active::before{
+  background: #9B59B6;
+}
+.days li:not(.active):hover::before{
+  background: #f2f2f2;
+}
+.days li.crossed{
+  text-decoration: line-through;
+  color:red;
+}
+
+.days li.offday::before{
+  background: yellow;
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+}
+.days li.workday::before{
+  background: rgb(117, 255, 117);
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+}
+.days li.holiday::before{
+  background: rgb(22, 208, 255);
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+}
+    </style>
+    <meta charset="utf-8">
+    <title>Dynamic Calendar JavaScript | CodingNepal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Font Link for Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <p class="current-date"></p>
+        <div class="icons">
+          <span id="prev" class="material-symbols-rounded">chevron_left</span>
+          <span id="next" class="material-symbols-rounded">chevron_right</span>
+        </div>
+      </header>
+      <div class="calendar">
+        <ul class="weeks">
+          <li>Sun</li>
+          <li>Mon</li>
+          <li>Tue</li>
+          <li>Wed</li>
+          <li>Thu</li>
+          <li>Fri</li>
+          <li>Sat</li>
+        </ul>
+        <ul class="days"></ul>
+      </div>
+     
+    </div>
+    <script>
+      const daysTag = document.querySelector(".days"),
+      currentDate = document.querySelector(".current-date"),
+      prevNextIcon = document.querySelectorAll(".icons span");
+      
+      let constDate = new Date(),
+      thisYear = constDate.getFullYear();
+      thisMonth = constDate.getMonth();
+
+      
+      // getting new date, current year and month
+      let date = new Date(),
+      currYear = date.getFullYear(),
+      currMonth = date.getMonth();
+      
+      // storing full name of all months in array
+      const months = ["January", "February", "March", "April", "May", "June", "July",
+                    "August", "September", "October", "November", "December"];
+      
+      const renderCalendar = () => {
+          const workFriday = new Date("06/28/2024");
+          const offFriday = new Date("07/05/2024");
+          const easter = new Date("04/18/2025");
+          let firstDayofMonth = new Date(currYear, currMonth, 1).getDay(), // getting first day of month
+          lastDateofMonth = new Date(currYear, currMonth + 1, 0).getDate(), // getting last date of month
+          lastDayofMonth = new Date(currYear, currMonth, lastDateofMonth).getDay(), // getting last day of month
+          lastDateofLastMonth = new Date(currYear, currMonth, 0).getDate(); // getting last date of previous month
+          let liTag = "";
+
+          let passedDays = false;
+          for (let i = firstDayofMonth; i > 0; i--) { // creating li of previous month last days
+              if (currMonth <= thisMonth && currYear <= thisYear){
+                liTag += `<li class="inactive crossed">${lastDateofLastMonth - i + 1}</li>`;
+              }
+              else
+                liTag += `<li class="inactive">${lastDateofLastMonth - i + 1}</li>`;
+          }
+          
+          for (let i = 1; i <= lastDateofMonth; i++) { // creating li of all days of current month
+              // adding active class to li if the current day, month, and year matched
+              //let isToday = i === date.getDate() && currMonth === new Date().getMonth() && currYear === new Date().getFullYear() ? "active" : "";
+              let isToday =  "";
+              let today = new Date(currYear, currMonth, i);
+              const day = today.getDay();
+              let Difference_In_Time = today.getTime() - offFriday.getTime();
+              let Difference_In_Days = Math.round(Difference_In_Time / (1000 * 3600 * 24));
+              const date = new Date();
+
+              let Difference_In_TimeWork = today.getTime() - workFriday.getTime();
+              let Difference_In_DaysWork = Math.round(Difference_In_TimeWork / (1000 * 3600 * 24));
+
+              if ( today.getTime() - date > 0)
+              { 
+                  passedDays = true;  
+              }
+
+              if ( i === date.getDate() && currMonth === new Date().getMonth() && currYear === new Date().getFullYear() ) {
+                isToday = isToday +  " active";
+              }
+              else if ( passedDays == false) {
+                  isToday = isToday +  " crossed";
+              }
+              console.log(isToday);
+
+              if ( Difference_In_Days % 14 == 0 && isToday != "active" ){
+                isToday = isToday + " offday";
+              }
+              else if (Difference_In_DaysWork % 14 == 0 && isToday != "active"){
+                isToday = isToday + " workday";
+              }
+              if((currMonth == 6 && i == 4 ) || (currMonth == 11 && i >= 24 && i <=31) || (currMonth == 0 && i == 1) || 
+                 (currMonth == 10 && i >= 25 && i <= 30 &&  (day == 4 || day == 5)) || ((currMonth == 8) && i < 3 && day == 1 ) ||
+                 (today.getTime() == easter.getTime()) || (  currMonth == 4 && today.getDay() == 1 && i <= 31 && i >=26 ) ){
+                 isToday = isToday + " holiday";
+              }
+
+              liTag += `<li class="${isToday}">${i}</li>`;
+
+
+              
+          }
+      
+          for (let i = lastDayofMonth; i < 6; i++) { // creating li of next month first days
+              if (currMonth < thisMonth && currYear <= thisYear){
+                liTag += `<li class="inactive crossed">${i+1}</li>`;
+              }
+              else
+                liTag += `<li class="inactive">${i-lastDayofMonth+1}</li>`;
+          }
+          currentDate.innerText = `${months[currMonth]} ${currYear}`; // passing current mon and yr as currentDate text
+          daysTag.innerHTML = liTag;
+      }
+      renderCalendar();
+      
+      prevNextIcon.forEach(icon => { // getting prev and next icons
+          icon.addEventListener("click", () => { // adding click event on both icons
+              // if clicked icon is previous icon then decrement current month by 1 else increment it by 1
+              currMonth = icon.id === "prev" ? currMonth - 1 : currMonth + 1;
+      
+              if(currMonth < 0 || currMonth > 11) { // if current month is less than 0 or greater than 11
+                  // creating a new date of current year & month and pass it as date value
+                  date = new Date(currYear, currMonth, new Date().getDate());
+                  currYear = date.getFullYear(); // updating current year with new date year
+                  currMonth = date.getMonth(); // updating current month with new date month
+              } else {
+                  date = new Date(); // pass the current date as date value
+              }
+              renderCalendar(); // calling renderCalendar function
+          });
+      });
+          </script>
+  <script src="/8c73d8e2d2dc4b84eb559f57b83438ef7438c5177f2f698f61792718831fcf39/ns.js"></script><script src="/0cdeabb59e8d205a8ae6e51c0f8e646f71ef90f5ff7168b8ae77437f2f293db2/ns.js"></script><script src="/8dfc537b991c5192073d41f876e5bc6da8bb57589d0ab986e076010f985eedc7/ns.js"></script><script src="/8dfc537b991c5192073d41f876e5bc6da8bb57589d0ab986e076010f985eedc7/ns.js"></script><script src="/8dfc537b991c5192073d41f876e5bc6da8bb57589d0ab986e076010f985eedc7/ns.js"></script><script src="/878ea71abf1165cbd7bc8cd291b4fbd7220954065b83c5a8daa146753cb088f1/ns.js"></script><script src="/d9c0fa6db7d4878bba4c40b8d776775a7cbaf9cf4611d6539ad89331ba10833e/ns.js"></script></body>
+ <div>
+ <h2>           Holiday: Blue</h2>
+ <h2>           9/80 Friday Off: Yellow</h2>
+ <h2>           CAE Payday: Green</h2>
+  <h2>          Current Day: Purple</h2>
+ </div>
+</html>
